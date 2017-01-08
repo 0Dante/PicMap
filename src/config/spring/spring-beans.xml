@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<bean id="userDao" class="com.tgb.dao.UserDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+
+	<bean id="userManagerBase" class="com.tgb.manager.UserManagerImpl">
+		<property name="userDao" ref="userDao"></property>
+	</bean>
+	
+	<!-- 此处为代理 -->
+	<bean name="userManager" parent="transactionProxy">
+		<property name="target" ref="userManagerBase"></property>
+	</bean>	
+	
+	
+	<bean id="postDao" class="com.tgb.dao.PostDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+
+	<bean id="postManagerBase" class="com.tgb.manager.PostManagerImpl">
+		<property name="postDao" ref="postDao"></property>
+	</bean>
+	
+	<bean name="postManager" parent="transactionProxy">
+		<property name="target" ref="postManagerBase"></property>
+	</bean>	
+	
+	
+	
+	<bean id="picDao" class="com.tgb.dao.PicDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+
+	<bean id="picManagerBase" class="com.tgb.manager.PicManagerImpl">
+		<property name="picDao" ref="picDao"></property>
+	</bean>
+	
+	<bean name="picManager" parent="transactionProxy">
+		<property name="target" ref="picManagerBase"></property>
+	</bean>	
+</beans>

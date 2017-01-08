@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-3.2.xsd
+	http://www.springframework.org/schema/mvc
+	http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd">
+	
+	<!-- 注解扫描包 -->
+	<context:component-scan base-package="com.tgb" />
+
+	<!-- 开启注解 -->
+	<mvc:annotation-driven />
+	
+	<!--  jsonbody转换 -->
+	<context:component-scan base-package="org.zlex.json.controller" />  
+	<context:annotation-config />  
+	<mvc:annotation-driven />  
+	
+	
+	<!-- 静态资源(js/image)的访问 -->
+	<mvc:resources location="/js/" mapping="/js/**"/>
+
+	<!--<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
+			<bean class="com.tgb.web.UserTokenInterceptor"></bean>
+		</mvc:interceptor>
+	</mvc:interceptors>-->	
+	
+	<!-- 定义视图解析器 -->	
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/"></property>
+		<property name="suffix" value=".jsp"></property>
+	</bean>
+	
+	
+	
+	
+	<!--  注解适配器 -->
+	<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+	<property name="webBindingInitializer" ref="customBinder"/>
+	<!--  MappingJacksonHttpMessageConventer -->
+	<property name="messageConverters">
+		<list>
+			<bean class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter"/>
+		</list>
+	</property>
+	
+	</bean>
+	
+	
+	
+	<!-- 自定义webBinder -->
+	<bean id="customBinder"
+		class="org.springframework.web.bind.support.ConfigurableWebBindingInitializer">
+		<!-- 使用converter进行参数转 -->
+		<property name="conversionService" ref="conversionService" />
+		<!-- 配置validator -->
+		<property name="validator" ref="validator" />
+
+		<!-- propertyEditorRegistrars用于属性编辑器 -->
+		<!-- <property name="propertyEditorRegistrars"> <list> <ref bean="customPropertyEditor" 
+			/> </list> </property> -->
+	</bean>
+
+		<!-- 转换器 -->
+	<bean id="conversionService"
+		class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+		<property name="converters">
+			<list>
+				<bean class="com.tgb.web.CustomDateConverter" />
+				<bean class="com.tgb.web.StringTrimConverter" />
+			</list>
+		</property>
+	</bean>
+	<!-- 校验器 -->
+	<bean id="validator"
+		class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+		<!-- 校验器 -->
+		<property name="providerClass" value="org.hibernate.validator.HibernateValidator" />
+		<!-- 指定校验使用的资源文件，如果不指定则默认使用classpath下的ValidationMessages.properties -->
+		<property name="validationMessageSource" ref="messageSource" />
+	</bean>
+	
+	
+	
+	
+	<!-- SpringMVC上传文件时，需要配置MultipartResolver处理器 -->   
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">   
+        <!-- 指定所上传文件的总大小不能超过200000KB。注意maxUploadSize属性的限制不是针对单个文件，而是所有文件的容量之和 -->   
+        <property name="maxUploadSize" value="200000000"/>   
+        
+		<property name="defaultEncoding" value="utf-8" /> 
+		 <!-- 允许写入内存中的最大值 10240默认-->   
+		<property name="maxInMemorySize" value="10240" /> 
+		 
+    </bean>   
+      
+    <!-- 该异常是SpringMVC在检查上传的文件信息时抛出来的，而且此时还没有进入到Controller方法中 -->   
+    <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">   
+        <property name="exceptionMappings">   
+            <props>   
+                <!-- 遇到MaxUploadSizeExceededException异常时，自动跳转到/WEB-INF/error.jsp页面 -->   
+                <prop key="org.springframework.web.multipart.MaxUploadSizeExceededException">/error</prop>   
+            </props>   
+        </property>   
+    </bean>  
+    
+    <!--这个为了将文件或者图片名称转换为同一的utf-8模式过滤器
+     <filter>   
+        <filter-name>SpringCharacterEncodingFilter</filter-name>   
+        <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>   
+        <init-param>   
+            <param-name>encoding</param-name>   
+            <param-value>UTF-8</param-value>   
+        </init-param>   
+    </filter>   
+    <filter-mapping>   
+        <filter-name>SpringCharacterEncodingFilter</filter-name>   
+        <url-pattern>/*</url-pattern>   
+    </filter-mapping>    -->
+    
+    
+    
+	<!-- 校验错误信息配置文件 -->
+	<bean id="messageSource"
+		class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<!-- 资源文件名 -->
+		<property name="basenames">
+			<list>
+				<value>classpath:CustomValidationMessages</value>
+			</list>
+		</property>
+		<!-- 资源文件编码格式 -->
+		<property name="fileEncodings" value="utf-8" />
+		<!-- 对资源文件内容缓存时间，单位秒 -->
+		<property name="cacheSeconds" value="120" />
+	</bean>
+	
+</beans>
